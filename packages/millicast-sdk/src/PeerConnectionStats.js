@@ -81,6 +81,20 @@ export const peerConnectionStatsEvents = {
 }
 
 /**
+ * Enum of stats formats to apply
+ * @readonly
+ * @enum {String}
+ * @property {String} DEFAULT
+ * @property {String} CONDENSED
+ * @property {String} RAW
+ */
+export const StatsType = {
+  DEFAULT: 'Default',
+  CONDENSED: 'Condensed',
+  RAW: 'Raw'
+}
+
+/**
    * Parses incoming WebRTC statistics
    * This method takes statistical data from @dolbyio/webrtc-stats and transforms it into
    * a structured format compatible with previous versions.
@@ -88,6 +102,7 @@ export const peerConnectionStatsEvents = {
    * @param {Object} webRTCStats - The statistics object containing various WebRTC stats
    */
 const parseWebRTCStats = (webRTCStats) => {
+  // Check stats type for specific format
   const { input, output, rawStats, ...filteredStats } = webRTCStats
   const statsObject = {
     ...filteredStats,
@@ -120,14 +135,21 @@ const parseWebRTCStats = (webRTCStats) => {
   return statsObject
 }
 
+const defaultStatsOptions = {
+  autoInitStats: true,
+  refreshRateMs: 1000,
+  statsType: StatsType.DEFAULT
+}
+
 export default class PeerConnectionStats extends EventEmitter {
-  constructor (peer, options = { autoInitStats: true }) {
+  constructor (peer, options = defaultStatsOptions) {
     super()
     this.peer = peer
+    this.options = options
     this.collection = null
     this.initialized = false
 
-    if (options.autoInitStats) {
+    if (this.options.autoInitStats) {
       this.init()
     }
   }
@@ -144,7 +166,7 @@ export default class PeerConnectionStats extends EventEmitter {
     const peer = this.peer
     try {
       this.collection = new WebRTCStats({
-        getStatsInterval: 1000,
+        getStatsInterval: this.options.refreshRateMs,
         getStats: () => {
           return peer.getStats()
         },

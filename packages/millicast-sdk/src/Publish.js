@@ -10,6 +10,7 @@ import PeerConnection, { webRTCEvents } from './PeerConnection'
 import FetchError from './utils/FetchError'
 import { supportsInsertableStreams, supportsRTCRtpScriptTransform } from './utils/StreamTransform'
 import workerString from './TransformWorker.worker.js'
+import { StatsType } from './PeerConnectionStats'
 
 const logger = Logger.get('Publish')
 
@@ -23,7 +24,9 @@ const connectOptions = {
   simulcast: false,
   scalabilityMode: null,
   peerConfig: {
-    autoInitStats: true
+    autoInitStats: true,
+    refreshRateMs: 1000,
+    statsType: StatsType.DEFAULT
   }
 }
 

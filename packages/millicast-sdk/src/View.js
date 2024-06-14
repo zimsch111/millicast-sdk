@@ -8,6 +8,7 @@ import FetchError from './utils/FetchError'
 import { supportsInsertableStreams, supportsRTCRtpScriptTransform } from './utils/StreamTransform'
 import workerString from './TransformWorker.worker.js'
 import SdpParser from './utils/SdpParser'
+import { StatsType } from './PeerConnectionStats'
 
 const logger = Logger.get('View')
 
@@ -16,7 +17,9 @@ const connectOptions = {
   disableVideo: false,
   disableAudio: false,
   peerConfig: {
-    autoInitStats: true
+    autoInitStats: true,
+    refreshRateMs: 1000,
+    statsType: StatsType.DEFAULT
   }
 }
 

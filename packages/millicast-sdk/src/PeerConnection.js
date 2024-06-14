@@ -1,6 +1,6 @@
 import EventEmitter from 'events'
 import reemit from 're-emitter'
-import PeerConnectionStats, { peerConnectionStatsEvents } from './PeerConnectionStats'
+import PeerConnectionStats, { StatsType, peerConnectionStatsEvents } from './PeerConnectionStats'
 import SdpParser from './utils/SdpParser'
 import UserAgent from './utils/UserAgent'
 import Logger from './Logger'
@@ -25,6 +25,12 @@ const localSDPOptions = {
   setSDPToPeer: true
 }
 
+const defaultStatsOptions = {
+  autoInitStats: true,
+  refreshRateMs: 1000,
+  statsType: StatsType.DEFAULT
+}
+
 /**
  * @class PeerConnection
  * @extends EventEmitter
@@ -43,14 +49,16 @@ export default class PeerConnection extends EventEmitter {
   /**
    * Instance new RTCPeerConnection.
    * @param {RTCConfiguration} config - Peer configuration.
-   * @param {Boolean} [autoInitStats = true] - True to initialize statistics monitoring of the RTCPeerConnection accessed via Logger.get(), false to opt-out.
+   * @param {Boolean} [config.autoInitStats = true] - True to initialize statistics monitoring of the RTCPeerConnection accessed via Logger.get(), false to opt-out.
+   * @param {Number} config.refreshRateMs - The value in milliseconds for how frequently we should fetch stats.
+   * @param {StatsType} config.statsType - Format for the stats to be returned.
    */
-  async createRTCPeer (config = { autoInitStats: true }) {
+  async createRTCPeer (config = defaultStatsOptions) {
     logger.info('Creating new RTCPeerConnection')
     logger.debug('RTC configuration provided by user: ', config)
     this.peer = instanceRTCPeerConnection(this, config)
     if (config.autoInitStats) {
-      this.initStats()
+      this.initStats(config)
     }
   }
 
@@ -341,11 +349,11 @@ export default class PeerConnection extends EventEmitter {
    *   console.log('Stats from event: ', stats)
    * })
    */
-  initStats () {
+  initStats (config) {
     if (this.peerConnectionStats) {
       logger.warn('PeerConnection.initStats() has already been called.  Automatic initialization occurs via View.connect(), Publish.connect() or this.createRTCPeer(). See options')
     } else if (this.peer) {
-      this.peerConnectionStats = new PeerConnectionStats(this.peer)
+      this.peerConnectionStats = new PeerConnectionStats(this.peer, config)
       reemit(this.peerConnectionStats, this, [peerConnectionStatsEvents.stats])
     } else {
       logger.warn('Cannot init peer stats: RTCPeerConnection not initialized')
